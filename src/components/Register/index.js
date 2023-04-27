@@ -1,6 +1,20 @@
 import { useState } from "react";
 import axios from "axios";
+import * as Yup from 'yup';
 import { useNavigate } from "react-router-dom";
+
+const registerSchema = Yup.object().shape({
+  username: Yup.string()
+    .required('Username is required')
+    .min(3, 'Username must be at least 3 characters'),
+  password: Yup.string()
+    .required('Password is required')
+    .min(6, 'Password must be at least 6 characters'),
+  email: Yup.string()
+    .required('Email is required')
+    .email('Invalid email format')
+});
+
 
 const Register = () => {
   const navigate = useNavigate();
@@ -16,7 +30,10 @@ const Register = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      setIsRegistering(true)
+      setIsRegistering(true);
+
+      await registerSchema.validate({ username, email, password });
+
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/register`,
         {
@@ -25,12 +42,12 @@ const Register = () => {
           password
         }
       );
-      console.log(response.data.message);
+      console.log(response?.data?.message);
       setError(null);
       setSuccessMessage("User registered successfully!");
       setIsRegistering(false);
     } catch (error) {
-      setError(error.response.data.message || "Unknown error occurred");    
+      setError(error?.response?.data?.message || error?.errors[0] || "Unknown error occurred");    
       setSuccessMessage("")
       setIsRegistering(false)
     }
@@ -79,8 +96,8 @@ const Register = () => {
         {successMessage ?( <div className="flex items-center justify-between">
           <button
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            
-            onClick={()=>navigate('/login')}// type="submit"
+            type="button"
+            onClick={()=>navigate('/login')}
           >
             Login
           </button>

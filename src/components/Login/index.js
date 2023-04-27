@@ -2,6 +2,12 @@ import axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCookies } from "react-cookie";
+import * as Yup from 'yup';
+
+const loginSchema = Yup.object().shape({
+  username: Yup.string().required('Username is required'),
+  password: Yup.string().required('Password is required'),
+});
 
 const Login = () => {
   const [, setCookie] = useCookies(["token"]);
@@ -16,7 +22,10 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      setIsLoging(true)
+      setIsLoging(true);
+
+      await loginSchema.validate({ username, password });
+
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/login`,
         {
@@ -24,6 +33,7 @@ const Login = () => {
           password
         }
       );
+
       const token = response.data.token;
 
       if (token) {
@@ -33,7 +43,7 @@ const Login = () => {
       }
     } catch (error) {
       setIsLoging(false);
-      setError(error.response.data.message || "Unknown error occurred");    }
+      setError(error?.response?.data?.message || error?.errors[0] || "Unknown error occurred");    }
   };
 
   const handleClearError = () => {
